@@ -45,43 +45,65 @@ This project uses **Parameter-Efficient Fine-Tuning (PEFT / LoRA)** to adapt a p
 
 ---
 
-## 🛠️ Tech Stack & Requirements
+## 🛠️ Tech Stack & Tooling
 
-* **Language:** Python 3.10+
-* **Deep Learning Framework:** PyTorch
+* **Package & Environment Manager:** **`uv`** (Astral's ultra-fast Python package and project manager)
+* **Development Environment:** **Antigravity IDE** (AI pair programming, code authoring, Git version control)
+* **Training Hardware:** **Google Colab Cloud GPU** (Free NVIDIA Tesla T4 16GB) / Kaggle
+* **Deep Learning Framework:** PyTorch 2.1+
 * **Hugging Face Ecosystem:** `transformers`, `datasets[audio]`, `peft`, `accelerate`, `evaluate`
-* **Audio Processing:** `torchaudio`, `librosa`, `soundfile`
+* **Audio Tooling:** `torchaudio`, `librosa`, `soundfile`
 * **Evaluation:** `jiwer`
 
 ---
 
-## 🚀 Quick Start Guide
+## 🔄 Development Workflow (Option 1: Antigravity ➔ Google Colab)
 
-### 1. Clone & Setup Environment
+We follow the **Option 1 hybrid workflow**:
+
+1. **Local Authoring & Architecture in Antigravity IDE:**
+   * Write, refactor, and manage modular scripts (`src/`) and notebooks (`notebooks/`) locally with Antigravity’s AI assistant.
+   * Run quick sanity checks (Phase 1 MVP 1-batch tests) locally or via local CPU/MPS.
+   * Push clean commits to GitHub.
+2. **Heavy GPU Execution on Google Colab:**
+   * Open the repository's training notebook directly in Google Colab with 1 click:
+     [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com)
+   * Leverage Colab's free cloud NVIDIA T4 GPU for full-scale training on the New Testament (~15 hours of audio).
+   * Save fine-tuned LoRA checkpoints to Google Drive or Hugging Face Hub.
+
+---
+
+## 🚀 Quick Start Guide (Powered by `uv`)
+
+### 1. Install `uv` (if not already installed)
 
 ```bash
-git clone https://github.com/your-username/deepwork.git
-cd deepwork
-
-python -m venv venv
-source venv/bin/activate  # On Windows: venv\Scripts\activate
-pip install -r requirements.txt
+# macOS / Linux
+curl -LsSf https://astral.sh/uv/install.sh | sh
 ```
 
-### 2. Recommended `requirements.txt`
+### 2. Local Environment Setup
 
-```text
-torch>=2.0.0
-torchaudio>=2.0.0
-transformers>=4.38.0
-datasets[audio]>=2.17.0
-peft>=0.9.0
-accelerate>=0.27.0
-evaluate>=0.4.1
-jiwer>=3.0.3
-librosa>=0.10.1
-soundfile>=0.12.1
+```bash
+cd /Users/paviomuniz/Library/CloudStorage/OneDrive-Pessoal/Projetos/deepwork
+
+# Create virtual environment with uv
+uv venv
+
+# Activate virtual environment
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+
+# Install all dependencies in seconds using uv
+uv pip install -r requirements.txt
 ```
+
+### 3. Launching Notebooks in Antigravity or Jupyter
+
+```bash
+# Run Jupyter within the uv-managed environment
+uv run jupyter lab
+```
+
 
 ### 3. Pipeline Flow
 

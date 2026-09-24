@@ -49,21 +49,19 @@
 ---
 
 ### Phase 2: Environment Setup & Data Pipeline (Days 11–16)
-**Goal:** Prepare a clean, reproducible audio processing pipeline on Kaggle.
+**Goal:** Set up local development in Antigravity with `uv` and configure the Option 1 workflow targeting Google Colab GPU.
 
-1. **Platform Setup:**
-   * Set up a Kaggle Notebook with GPU accelerator turned on (`T4 x 2` or `P100`).
-   * Install dependencies: `transformers`, `datasets[audio]`, `peft`, `torchaudio`, `librosa`, `jiwer`, `evaluate`, `accelerate`.
+1. **Environment & Tooling Setup:**
+   * Use **`uv`** as the Python package manager: create virtualenv (`uv venv`) and install dependencies in seconds (`uv pip install -r requirements.txt`).
+   * Follow the **Option 1 Workflow**: Author code and sanity checks in Antigravity IDE; push to GitHub and run full New Testament GPU training on Google Colab (free Tesla T4 16GB).
+
 2. **Target Language Selection:**
-   * Choose **one primary language** from BibleTTS:
-     * *Option A:* **Yoruba** (Rich tonal system and diacritics; high linguistic interest).
-     * *Option B:* **Hausa** (Widely spoken Chadic language in West Africa).
-     * *Option C:* **Akuapem Twi** (Niger-Congo language; clean single-speaker studio data).
+   * **Yoruba (`yor`) exclusively:** Selected for its rich tonal system, underdots (ẹ, ọ, ṣ), and high academic interest in demonstrating tone-preservation.
 3. **Data Preprocessing Script:**
-   * Load the BibleTTS dataset via Hugging Face `load_dataset("bible-nlp/bibletts", "<language>")`.
+   * Load the BibleTTS dataset via Hugging Face `load_dataset("bible-nlp/bibletts", "yor")`.
    * Resample audio clips from 48 kHz to 16 kHz using `cast_column("audio", Audio(sampling_rate=16000))`.
    * Extract features using `WhisperFeatureExtractor` and tokenize text using `WhisperTokenizer`.
-   * Create train/validation/test splits (e.g., Gospel of Luke and Acts for training; Romans for validation; John for test).
+   * Apply canonical book split: Luke/Acts/Epistles for training (~15h); Romans/1 Cor for validation (~2.5h); Gospel of John for held-out testing (~2.5h).
 
 ---
 
@@ -71,7 +69,7 @@
 **Goal:** Run baseline tests and fine-tune Whisper using parameter-efficient methods.
 
 1. **Establish Zero-Shot Baseline:**
-   * Run the vanilla `openai/whisper-small` (or `base`) on your BibleTTS test split without any fine-tuning.
+   * Run the vanilla `openai/whisper-small` on your BibleTTS test split without any fine-tuning.
    * Calculate baseline WER and CER. (Notice expected failures: hallucinations, missing tone marks, or English bias).
 2. **Configure LoRA Fine-Tuning:**
    ```python
@@ -89,9 +87,11 @@
 3. **Training Execution:**
    * Train using Hugging Face `Seq2SeqTrainer` with `fp16=True`, batch size 8–16, and gradient accumulation steps of 2–4.
    * Save checkpoints based on lowest validation loss or validation WER.
-4. **Assignment Experiments (Run 2 Comparisons):**
-   * *Experiment 1:* **Zero-shot vs. LoRA Fine-Tuned** (Measure the main jump in accuracy).
-   * *Experiment 2:* **Impact of Tones & Diacritics** (Evaluate performance on standard text vs. stripped diacritic text).
+4. **Assignment Experiments (3-Way Ablation Study):**
+   * *Configuration A:* **Zero-Shot Baseline** (Vanilla `whisper-small` without updates).
+   * *Configuration B:* **LoRA without SpecAugment** (Baseline adaptation on raw log-mel features).
+   * *Configuration C:* **LoRA with SpecAugment** (Anti-overfitting masking on single studio voice).
+
 
 ---
 
