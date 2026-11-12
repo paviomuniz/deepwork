@@ -1,0 +1,760 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multi-Modal Audio-Language Alignment | Deep Learning Seminar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700;800&family=Inter:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <!-- MathJax for rendering equations -->
+  <script>
+    window.MathJax = {
+      tex: {
+        inlineMath: [['\\(', '\\)'], ['$', '$']],
+        displayMath: [['\\[', '\\]'], ['$$', '$$']]
+      },
+      options: {
+        skipHtmlTags: ['script', 'noscript', 'style', 'textarea', 'pre']
+      },
+      startup: {
+        ready: () => {
+          MathJax.startup.defaultReady();
+          MathJax.typesetPromise();
+        }
+      }
+    };
+  </script>
+  <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+
+  <style>
+    :root {
+      --bg-dark: #0b0f19;
+      --card-bg: rgba(22, 29, 47, 0.85);
+      --card-border: rgba(56, 189, 248, 0.2);
+      --accent-cyan: #38bdf8;
+      --accent-indigo: #818cf8;
+      --accent-emerald: #34d399;
+      --accent-rose: #fb7185;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --font-heading: 'Outfit', sans-serif;
+      --font-body: 'Inter', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-body);
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* Presentation Screen Container */
+    #deck-container {
+      position: relative;
+      width: 94vw;
+      max-width: 1500px;
+      aspect-ratio: 16 / 9;
+      background: radial-gradient(circle at 10% 20%, rgba(30, 41, 59, 0.5) 0%, rgba(11, 15, 25, 0.98) 90%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 18px;
+      box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7);
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .slide {
+      position: absolute;
+      inset: 0;
+      padding: 3rem 4rem;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      pointer-events: none;
+      transform: translateX(30px);
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .slide.active {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateX(0);
+    }
+
+    /* Slide Header */
+    .slide-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-family: var(--font-mono);
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--accent-cyan);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.6rem;
+    }
+
+    .slide-title {
+      font-family: var(--font-heading);
+      font-size: 2.2rem;
+      font-weight: 700;
+      color: var(--text-main);
+      line-height: 1.2;
+      margin-bottom: 1.8rem;
+    }
+
+    .slide-title span {
+      background: linear-gradient(135deg, var(--accent-cyan), var(--accent-indigo));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* Layout Grids */
+    .grid-2 {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      flex: 1;
+    }
+
+    .grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 1.5rem;
+      flex: 1;
+    }
+
+    /* Glass Cards */
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 1.6rem;
+      display: flex;
+      flex-direction: column;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+    }
+
+    .card.cyan { border-color: rgba(56, 189, 248, 0.35); }
+    .card.indigo { border-color: rgba(129, 140, 248, 0.35); }
+    .card.emerald { border-color: rgba(52, 211, 153, 0.35); }
+    .card.rose { border-color: rgba(251, 113, 133, 0.35); }
+
+    .card-title {
+      font-family: var(--font-heading);
+      font-size: 1.25rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .card.cyan .card-title { color: var(--accent-cyan); }
+    .card.indigo .card-title { color: var(--accent-indigo); }
+    .card.emerald .card-title { color: var(--accent-emerald); }
+    .card.rose .card-title { color: var(--accent-rose); }
+
+    .card ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.85rem;
+      font-size: 0.98rem;
+      line-height: 1.5;
+      color: #e2e8f0;
+    }
+
+    .card ul li {
+      position: relative;
+      padding-left: 1.4rem;
+    }
+
+    .card ul li::before {
+      content: "•";
+      position: absolute;
+      left: 0;
+      top: -1px;
+      font-size: 1.3rem;
+      color: var(--accent-cyan);
+    }
+
+    .card.indigo ul li::before { color: var(--accent-indigo); }
+    .card.emerald ul li::before { color: var(--accent-emerald); }
+    .card.rose ul li::before { color: var(--accent-rose); }
+
+    /* Code & Formulas */
+    .formula-box {
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid rgba(56, 189, 248, 0.25);
+      border-radius: 8px;
+      padding: 0.8rem 1rem;
+      margin: 0.6rem 0;
+      font-family: var(--font-mono);
+      font-size: 0.95rem;
+      color: #38bdf8;
+      text-align: center;
+    }
+
+    /* Interactive Diagrams */
+    .diagram-svg {
+      width: 100%;
+      height: 100%;
+      max-height: 220px;
+    }
+
+    /* Bottom Controller Bar */
+    #controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.8rem 1.8rem;
+      background: rgba(15, 23, 42, 0.9);
+      border-top: 1px solid rgba(255, 255, 255, 0.08);
+      font-family: var(--font-mono);
+      font-size: 0.9rem;
+    }
+
+    .btn {
+      background: rgba(30, 41, 59, 0.8);
+      color: var(--text-main);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 6px;
+      padding: 0.45rem 1rem;
+      cursor: pointer;
+      font-family: inherit;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+
+    .btn:hover {
+      background: var(--accent-cyan);
+      color: #0b0f19;
+      border-color: var(--accent-cyan);
+    }
+
+    .btn.active {
+      background: var(--accent-indigo);
+      color: #fff;
+    }
+
+    #progress-bar {
+      height: 4px;
+      background: linear-gradient(90deg, var(--accent-cyan), var(--accent-indigo));
+      width: 10%;
+      transition: width 0.3s ease;
+    }
+
+    /* Speaker Notes Drawer */
+    #notes-drawer {
+      position: absolute;
+      bottom: 50px;
+      left: 0;
+      right: 0;
+      background: rgba(11, 15, 25, 0.96);
+      border-top: 2px solid var(--accent-indigo);
+      padding: 1.5rem 2.5rem;
+      font-size: 1.05rem;
+      line-height: 1.6;
+      color: #cbd5e1;
+      box-shadow: 0 -15px 30px rgba(0,0,0,0.7);
+      backdrop-filter: blur(16px);
+      transform: translateY(105%);
+      transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 100;
+      max-height: 40%;
+      overflow-y: auto;
+    }
+
+    #notes-drawer.open {
+      transform: translateY(0);
+    }
+
+    #notes-drawer h4 {
+      font-family: var(--font-heading);
+      color: var(--accent-indigo);
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 0.5rem;
+    }
+
+    /* Print Styles (Cmd+P to PDF) */
+    @media print {
+      body {
+        overflow: visible;
+        height: auto;
+        background: #0b0f19;
+      }
+      #deck-container {
+        width: 100%;
+        max-width: none;
+        aspect-ratio: auto;
+        border: none;
+        box-shadow: none;
+      }
+      #controls, #notes-drawer, #progress-bar {
+        display: none !important;
+      }
+      .slide {
+        position: relative !important;
+        inset: auto !important;
+        opacity: 1 !important;
+        transform: none !important;
+        page-break-after: always;
+        height: 100vh;
+        width: 100vw;
+        display: flex !important;
+        padding: 3rem;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <div id="deck-container">
+    <div id="progress-bar"></div>
+
+    <!-- SLIDE 1 -->
+    <div class="slide active" id="slide-1">
+      <div class="slide-badge">Deep Learning Seminar • Advanced Topic</div>
+      <h1 class="slide-title">Multi-Modal Audio-Language <span>Alignment</span></h1>
+      <p style="color: var(--accent-cyan); font-size: 1.25rem; font-family: var(--font-heading); margin-bottom: 2rem;">
+        Bridging Acoustic Foundation Encoders with Autoregressive Large Language Models
+      </p>
+
+      <div class="grid-2">
+        <div class="card indigo">
+          <div class="card-title">Continuous Physical Sound</div>
+          <ul>
+            <li><strong>16,000 samples/sec:</strong> High-density physical sound waveform.</li>
+            <li><strong>Acoustic Fidelity:</strong> Carries vocal prosody, pitch, emotion, urgency, and dialectal tone.</li>
+            <li><strong>Log-Mel Spectrograms:</strong> 80-channel continuous acoustic tensor representations.</li>
+            <li><strong>Foundation Encoder:</strong> OpenAI Whisper 24-layer Transformer.</li>
+          </ul>
+        </div>
+        <div class="card cyan">
+          <div class="card-title">Discrete Symbolic Language</div>
+          <ul>
+            <li><strong>~3 tokens/sec:</strong> Low temporal density, high symbolic reasoning semantics.</li>
+            <li><strong>Subword Tokenization:</strong> Multilingual BPE vocabularies (\(|\mathcal{V}| \approx 32\text{k} - 128\text{k}\)).</li>
+            <li><strong>Next-Token Manifold:</strong> Autoregressive causal attention models (LLaMA, Mistral, Qwen).</li>
+            <li><strong>The Question:</strong> How do we project continuous audio directly into the LLM latent space?</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 2 -->
+    <div class="slide" id="slide-2">
+      <div class="slide-badge">Motivation & Problem Definition</div>
+      <h2 class="slide-title">Why Align Modalities? <span>The Cascade Tax</span></h2>
+
+      <div class="grid-2">
+        <div class="card rose">
+          <div class="card-title">The Cascaded Pipeline Bottleneck</div>
+          <div style="background: rgba(0,0,0,0.3); padding: 0.8rem; border-radius: 8px; margin-bottom: 0.8rem; font-family: var(--font-mono); font-size: 0.85rem; text-align: center;">
+            Audio ➔ <span style="color: #fb7185;">ASR (Whisper)</span> ➔ Text ➔ <span style="color: #fb7185;">LLM</span> ➔ Text ➔ <span style="color: #fb7185;">TTS</span>
+          </div>
+          <ul>
+            <li><strong>Error Compounding:</strong> A single misheard phonetic token corrupts downstream LLM reasoning.</li>
+            <li><strong>Paralinguistic Annihilation:</strong> Text tokenization erases emotional prosody, sarcasm, and tone.</li>
+            <li><strong>Tonal Collapse:</strong> Yoruba tone marks (ọwọ́ vs owó) get discarded by standard text cleaners.</li>
+            <li><strong>Latency Overhead:</strong> Sequential inference across 3 distinct deep neural models.</li>
+          </ul>
+        </div>
+
+        <div class="card emerald">
+          <div class="card-title">Direct End-to-End Multimodal Alignment</div>
+          <div style="background: rgba(0,0,0,0.3); padding: 0.8rem; border-radius: 8px; margin-bottom: 0.8rem; font-family: var(--font-mono); font-size: 0.85rem; text-align: center; color: #34d399;">
+            Audio ➔ Acoustic Encoder ➔ <span style="color: #38bdf8;">Projection Bridge</span> ➔ Multimodal LLM
+          </div>
+          <ul>
+            <li><strong>Shared Latent Manifold:</strong> Continuous acoustic embeddings injected directly into LLM prefix.</li>
+            <li><strong>Acoustic Grounding:</strong> Retains speaker identity, background acoustic events, and pitch contours.</li>
+            <li><strong>Single Model Inference:</strong> End-to-end gradient backpropagation without error-prone text intermediates.</li>
+            <li><strong>Empirical Superiority:</strong> Consistently outperforms cascaded baselines by 3–5 BLEU points.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 3 -->
+    <div class="slide" id="slide-3">
+      <div class="slide-badge">Acoustic Foundations</div>
+      <h2 class="slide-title">Continuous Encoders vs. <span>Discrete Codecs</span></h2>
+
+      <div class="grid-2">
+        <div class="card cyan">
+          <div class="card-title">1. Continuous Encoders (Whisper / HuBERT)</div>
+          <div class="formula-box">
+            \(\mathbf{X} \in \mathbb{R}^{80 \times T} \xrightarrow{\text{Conformer / Transformer}} \mathbf{H} \in \mathbb{R}^{\frac{T}{2} \times d_{\text{audio}}}\)
+          </div>
+          <ul>
+            <li><strong>Floating-Point Vectors:</strong> Rich continuous semantic & acoustic representations in \(\mathbb{R}^d\).</li>
+            <li><strong>High-Resolution Nuance:</strong> Preserves acoustic textures and tonal inflections without discretization.</li>
+            <li><strong>Bridge Requirement:</strong> Requires neural adapters (MLP / Cross-Attention) to inject into text LLMs.</li>
+            <li><strong>Standard Choice:</strong> Backbone for AudioPaLM, SeamlessM4T, and Qwen2-Audio.</li>
+          </ul>
+        </div>
+
+        <div class="card indigo">
+          <div class="card-title">2. Discrete Neural Codecs (EnCodec / SoundStream)</div>
+          <div class="formula-box">
+            \(\mathbf{x}_{\text{wave}} \xrightarrow{\text{Encoder}} \mathbf{z} \xrightarrow{\text{RVQ } (K \text{ codebooks})} \mathbf{c} \in \{1,\dots,V\}^K\)
+          </div>
+          <ul>
+            <li><strong>Residual Vector Quantization:</strong> Converts sound waves into parallel streams of discrete integer codes.</li>
+            <li><strong>Unified Token Vocabulary:</strong> Acoustic tokens can be trained like regular text tokens.</li>
+            <li><strong>Sequence Explosion:</strong> 50–100 frames/sec \(\times\) 8 codebooks = <strong>400–800 tokens/sec</strong>!</li>
+            <li><strong>Context Saturation:</strong> Rapidly exhausts standard LLM attention context windows.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 4 -->
+    <div class="slide" id="slide-4">
+      <div class="slide-badge">Core Architecture</div>
+      <h2 class="slide-title">The Alignment Bridge: <span>3 Dominant Paradigms</span></h2>
+
+      <div class="grid-3">
+        <div class="card cyan">
+          <div class="card-title">Linear / MLP Adapter</div>
+          <div class="formula-box">
+            \(\mathbf{Z} = \text{GELU}(\mathbf{H}\mathbf{W}_1)\mathbf{W}_2\)
+          </div>
+          <ul>
+            <li><strong>Dimension Matching:</strong> Maps \(d_{\text{audio}} (768/1280) \rightarrow d_{\text{LLM}} (4096)\).</li>
+            <li><strong>Minimal Overhead:</strong> 2-layer MLP introduces almost zero computational latency.</li>
+            <li><strong>1:1 Temporal Mapping:</strong> Retains full acoustic frame sequence.</li>
+            <li><strong>Example:</strong> LLaMA-Omni, Mini-Omni.</li>
+          </ul>
+        </div>
+
+        <div class="card indigo">
+          <div class="card-title">Perceiver / Q-Former</div>
+          <div class="formula-box">
+            \(\mathbf{Q}_{\text{learnable}} \xrightarrow{\text{Cross-Attn}} \mathbf{H}_{\text{audio}}\)
+          </div>
+          <ul>
+            <li><strong>Fixed Learned Queries:</strong> 64 latent vectors cross-attend over the audio stream.</li>
+            <li><strong>Length Compression:</strong> Compresses 30s audio into a fixed 64-token prefix.</li>
+            <li><strong>Constant Memory:</strong> Immune to variable-length audio context spikes.</li>
+            <li><strong>Example:</strong> Flamingo-Audio, BLIP-2 style.</li>
+          </ul>
+        </div>
+
+        <div class="card emerald">
+          <div class="card-title">Gated Cross-Attention</div>
+          <div class="formula-box">
+            \(\mathbf{Y}_l = \text{softmax}\left(\frac{\mathbf{Q}\mathbf{K}_a^T}{\sqrt{d}}\right)\mathbf{V}_a\)
+          </div>
+          <ul>
+            <li><strong>Deep Interleaving:</strong> Audio cross-attention layers injected across all LLM blocks.</li>
+            <li><strong>Expressive Capacity:</strong> Text tokens query acoustic features at every layer.</li>
+            <li><strong>Dynamic Attention:</strong> High fidelity across complex conversational reasoning.</li>
+            <li><strong>Example:</strong> SeamlessM4T UnitY decoder.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 5 -->
+    <div class="slide" id="slide-5">
+      <div class="slide-badge">Mathematical Formulations</div>
+      <h2 class="slide-title">Two-Stage Training: <span>Contrastive Alignment & Autoregression</span></h2>
+
+      <div class="grid-2">
+        <div class="card cyan">
+          <div class="card-title">Stage 1: Contrastive Pre-Alignment (CLAP / InfoNCE)</div>
+          <div class="formula-box">
+            \(\mathcal{L}_{\text{InfoNCE}} = -\log \frac{\exp(\text{sim}(\mathbf{z}_a, \mathbf{z}_t) / \tau)}{\sum_{j=1}^B \exp(\text{sim}(\mathbf{z}_a, \mathbf{z}_{t,j}) / \tau)}\)
+          </div>
+          <ul>
+            <li><strong>Semantic Calibration:</strong> Audio embeddings \(\mathbf{z}_a\) and text embeddings \(\mathbf{z}_t\) projected into a shared cosine metric space.</li>
+            <li><strong>Contrastive Pairs:</strong> Pulls matching (speech, transcript) pairs together; pushes non-matching distractors apart.</li>
+            <li><strong>Temperature Scaling:</strong> Learnable parameter \(\tau\) controls logit distribution sharpness.</li>
+            <li><strong>Result:</strong> Aligns coordinate manifolds before LLM integration.</li>
+          </ul>
+        </div>
+
+        <div class="card emerald">
+          <div class="card-title">Stage 2: Multimodal Autoregressive Cross-Entropy</div>
+          <div class="formula-box">
+            \(\mathcal{L}_{\text{AR}} = -\sum_{i=1}^N \log P(y_i \mid y_{&lt; i}, \mathbf{E}_{\text{aligned}})\)
+          </div>
+          <ul>
+            <li><strong>Acoustic Conditioning:</strong> LLM generates discrete tokens conditioned on prefix audio latents \(\mathbf{E}_{\text{aligned}}\).</li>
+            <li><strong>Causal Masking:</strong> Language model retains left-to-right autoregressive reasoning.</li>
+            <li><strong>Catastrophic Forgetting Prevention:</strong> LLM base weights kept frozen or updated strictly via <strong>LoRA</strong> (\(W_0 + \frac{\alpha}{r}BA\)).</li>
+            <li><strong>Result:</strong> Fluent reasoning grounded in acoustic perception.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 6 -->
+    <div class="slide" id="slide-6">
+      <div class="slide-badge">Engineering & Efficiency</div>
+      <h2 class="slide-title">The 100 Hz Bottleneck: <span>Temporal Downsampling</span></h2>
+
+      <div class="grid-2">
+        <div class="card rose">
+          <div class="card-title">The Sequence Length Disparity</div>
+          <div style="background: rgba(0,0,0,0.3); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; text-align: center;">
+            <div style="font-size: 1.1rem; color: #fb7185; font-family: var(--font-mono); margin-bottom: 0.5rem;">
+              30s Audio = 3,000 frames vs. 80 Text Tokens
+            </div>
+            <div style="color: var(--text-muted); font-size: 0.9rem;">
+              Length Ratio: <strong>~35 : 1</strong>
+            </div>
+          </div>
+          <ul>
+            <li><strong>Quadratic Scaling:</strong> Transformer self-attention complexity scales with sequence length: \(\mathcal{O}(L^2)\).</li>
+            <li><strong>Context Choking:</strong> 3,000 raw audio frames consume the LLM context window in seconds.</li>
+            <li><strong>Compute Tax:</strong> High inference latency prevents real-time voice streaming.</li>
+          </ul>
+        </div>
+
+        <div class="card cyan">
+          <div class="card-title">Downsampling & Frame Compression</div>
+          <div class="formula-box">
+            \(\text{Shape: } [B, T, D] \xrightarrow{\text{Conv1D } (k=3, s=4)} \left[B, \frac{T}{4}, D'\right]\)
+          </div>
+          <ul>
+            <li><strong>1D Strided Convolutions:</strong> Stride \(s=4\) achieves a 75% sequence length reduction.</li>
+            <li><strong>Frame Stacking / Concatenation:</strong> Packs 4 consecutive 20ms frames into an 80ms composite vector.</li>
+            <li><strong>CTC Blank Pruning:</strong> Drops non-speech silent frames before LLM injection.</li>
+            <li><strong>Outcome:</strong> Compresses 3,000 frames to <strong>~750 tokens</strong> with zero loss in speech intelligibility.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 7 -->
+    <div class="slide" id="slide-7">
+      <div class="slide-badge">Empirical Benchmarks</div>
+      <h2 class="slide-title">Frontier Implementations: <span>AudioPaLM, Seamless & Qwen2</span></h2>
+
+      <div class="grid-3">
+        <div class="card cyan">
+          <div class="card-title">Google AudioPaLM</div>
+          <ul>
+            <li><strong>Architecture:</strong> PaLM-2 + AudioLM discrete token vocabulary.</li>
+            <li><strong>Unified Paradigm:</strong> Single model handles ASR, Speech-to-Text Translation, and TTS.</li>
+            <li><strong>Empirical Gain:</strong> Substantially outperformed cascaded Whisper + Google Translate baselines.</li>
+          </ul>
+        </div>
+
+        <div class="card indigo">
+          <div class="card-title">Meta SeamlessM4T</div>
+          <ul>
+            <li><strong>Scale:</strong> Multimodal translation across 100+ input/output languages.</li>
+            <li><strong>Expressive Translation:</strong> Transfers vocal timbre, pitch, and emotion across languages.</li>
+            <li><strong>Benchmark Gain:</strong> <strong>+3.2 to +5.8 BLEU</strong> improvement over cascaded baselines on CoVoST-2.</li>
+          </ul>
+        </div>
+
+        <div class="card emerald">
+          <div class="card-title">Alibaba Qwen2-Audio</div>
+          <ul>
+            <li><strong>Architecture:</strong> 24-layer audio encoder + Qwen-7B causal LLM.</li>
+            <li><strong>Conversational Voice:</strong> Native chat answering speech, music, and environmental sound queries.</li>
+            <li><strong>Acoustic Robustness:</strong> Retains <strong>>85% accuracy</strong> under 10dB SNR background noise.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 8 -->
+    <div class="slide" id="slide-8">
+      <div class="slide-badge">Limitations & Trade-offs</div>
+      <h2 class="slide-title">Failure Modes: <span>Modality Collapse & Hallucinations</span></h2>
+
+      <div class="grid-3">
+        <div class="card rose">
+          <div class="card-title">Modality Collapse</div>
+          <ul>
+            <li><strong>Text Prior Dominance:</strong> The LLM's multi-billion parameter text prior overpowers weak acoustic adapter signals.</li>
+            <li><strong>Hallucinated Accuracy:</strong> Outputs grammatically flawless English sentences that completely contradict the actual audio.</li>
+            <li><strong>Dialect Vulnerability:</strong> High error rates on under-resourced accents.</li>
+          </ul>
+        </div>
+
+        <div class="card rose">
+          <div class="card-title">Acoustic Hallucination Loops</div>
+          <ul>
+            <li><strong>Silence Traps:</strong> Background static or silent pauses trigger repetitive token loops.</li>
+            <li><strong>Cross-Attention Drift:</strong> Decoder advances text generation without incrementing audio attention position.</li>
+            <li><strong>Remedy:</strong> Requires strict Voice Activity Detection (VAD) and repetition penalty.</li>
+          </ul>
+        </div>
+
+        <div class="card indigo">
+          <div class="card-title">Compute Asymmetry</div>
+          <ul>
+            <li><strong>Pretraining Compute:</strong> Aligning joint encoders requires multi-node 80GB GPU clusters.</li>
+            <li><strong>Streaming Latency:</strong> Full 30s attention windows prevent sub-200ms conversational turn-taking.</li>
+            <li><strong>Edge Constraint:</strong> High VRAM footprint for real-time mobile deployment.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 9 -->
+    <div class="slide" id="slide-9">
+      <div class="slide-badge">Future Trajectory</div>
+      <h2 class="slide-title">The 12–24 Month Frontier: <span>Native Omni-Modality</span></h2>
+
+      <div class="grid-3">
+        <div class="card cyan">
+          <div class="card-title">Native Omni-Modality</div>
+          <ul>
+            <li><strong>Pretrained from Step 0:</strong> Interleaved text tokens, audio frames, and vision patches trained in a single transformer.</li>
+            <li><strong>No Bolted Adapters:</strong> Unified attention heads process acoustic pitch and symbolic reasoning natively (GPT-4o, Gemini 2.0).</li>
+          </ul>
+        </div>
+
+        <div class="card indigo">
+          <div class="card-title">Full-Duplex Streaming</div>
+          <ul>
+            <li><strong>Simultaneous I/O:</strong> Model listens and speaks in the exact same millisecond.</li>
+            <li><strong>Natural Interruption:</strong> Sub-200ms latency allows natural human conversational turn-taking.</li>
+            <li><strong>State Space Models:</strong> Linear Mamba-2 architectures replacing quadratic attention for continuous audio.</li>
+          </ul>
+        </div>
+
+        <div class="card emerald">
+          <div class="card-title">Test-Time Audio Reasoning</div>
+          <ul>
+            <li><strong>Acoustic Chain-of-Thought:</strong> Model performs latent search over ambiguous acoustic hypotheses before answering.</li>
+            <li><strong>Phoneme Disambiguation:</strong> Disambiguates tonal homophones in under-resourced languages.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 10 -->
+    <div class="slide" id="slide-10">
+      <div class="slide-badge">Summary & Takeaways</div>
+      <h2 class="slide-title">Synthesis: <span>The Future of Auditory Intelligence</span></h2>
+
+      <div class="card cyan" style="flex: 1; justify-content: center;">
+        <div class="card-title" style="font-size: 1.4rem; margin-bottom: 1.5rem;">Core Technical Insights for Deep Learning Practitioners</div>
+        <ul style="gap: 1.2rem; font-size: 1.05rem;">
+          <li><strong>Acoustic Fidelity > Cascaded Text:</strong> Direct multimodal projection preserves tone, prosody, and emotion that text tokenization irreversibly destroys.</li>
+          <li><strong>The 100 Hz Bottleneck is Solved by Striding:</strong> 1D strided convolutions and frame stacking compress the 35:1 audio-to-text sequence mismatch, preventing quadratic attention saturation.</li>
+          <li><strong>Two-Stage Alignment Prevents Catastrophic Forgetting:</strong> Contrastive InfoNCE pre-alignment followed by autoregressive next-token tuning preserves the LLM's language prior.</li>
+          <li><strong>Democratization via PEFT / LoRA:</strong> While foundation pretraining requires superclusters, parameter-efficient fine-tuning (LoRA) enables low-resource adaptation on accessible single-GPU hardware.</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Controller Bar -->
+    <div id="controls">
+      <div>
+        <span id="slide-num" style="color: var(--accent-cyan); font-weight: 700;">Slide 1 / 10</span>
+        <span style="color: var(--text-muted); margin-left: 1rem;">[Arrows / Space to navigate]</span>
+      </div>
+      <div style="display: flex; gap: 0.6rem;">
+        <button class="btn" onclick="prevSlide()">◀ Prev</button>
+        <button class="btn" onclick="nextSlide()">Next ▶</button>
+        <button class="btn" id="notes-btn" onclick="toggleNotes()">Speaker Notes [S]</button>
+        <button class="btn" onclick="window.print()">Print to PDF</button>
+      </div>
+    </div>
+
+    <!-- Speaker Notes Drawer -->
+    <div id="notes-drawer">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+        <h4>Spoken Delivery Script & Talking Points</h4>
+        <span style="color: var(--text-muted); font-size: 0.8rem;">Press 'S' or click button to close</span>
+      </div>
+      <p id="speaker-script"></p>
+    </div>
+  </div>
+
+  <script>
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+    let currentSlide = 0;
+
+    const scripts = [
+      "Welcome everyone. Today we explore Multi-Modal Audio-Language Alignment. Large language models operate in discrete symbolic token spaces. But the physical world speaks in continuous pressure waves—16,000 variations per second. Today we examine how modern foundation models eliminate cascaded pipelines and project acoustic representations directly into autoregressive LLM embedding manifolds.",
+      "Why does alignment matter? In a cascaded pipeline, if ASR mishears a proper noun, the downstream LLM hallucinates. Furthermore, tonal languages like Yoruba rely on pitch to distinguish word meaning; converting to text strips that nuance. End-to-end alignment preserves the full acoustic texture while enabling direct multimodal reasoning.",
+      "To connect sound to an LLM, we have continuous encoders like Whisper, and discrete neural codecs like Meta's EnCodec. Continuous encoders preserve rich acoustic representations in floating-point vectors, but require projection bridges. Discrete codecs turn audio into integers, but create sequence length explosions of 400 to 800 tokens per second. Most high-accuracy systems choose continuous encoders bridged via adapters.",
+      "Here are the three dominant bridge paradigms. The Linear MLP adapter projects dimension d_audio to d_LLM. The Q-Former/Perceiver uses learned queries to compress audio into fixed token counts like 64 tokens. Gated cross-attention directly interleaves audio attention across all LLM layers. Pretrained weights are frozen initially while the adapter bridge is trained.",
+      "Training follows a two-stage curriculum. Stage 1 uses contrastive InfoNCE loss (like CLAP) to pull matching audio and text representations together. Stage 2 optimizes autoregressive cross-entropy, where the LLM predicts text conditioned on the projected audio latents. Using LoRA during this stage avoids catastrophic forgetting of the LLM's language abilities.",
+      "Audio feature extractors produce frames every 10 to 20ms—yielding 3,000 frames for 30 seconds of speech. Text only requires 80 tokens. That is a 35-to-1 mismatch! Because attention is O(L^2), feeding raw audio frames destroys throughput. Downsampling via strided convolutions or frame stacking cuts sequence length by 75%, preserving intelligibility while fitting the LLM context window.",
+      "In empirical benchmarks, aligned architectures consistently outperform cascaded pipelines. AudioPaLM proved that direct audio input beats chaining ASR with Google Translate. Meta's SeamlessM4T showed 3 to 5 BLEU point gains across 100 languages. Qwen2-Audio achieves direct voice conversation with high robustness under acoustic noise.",
+      "Multimodal alignment faces several key challenges. First, 'Modality Collapse': the LLM's massive text prior can overpower the audio adapter, outputting high-probability generic text that contradicts the audio. Second, silence and noise can trigger hallucination loops. Third, training requires substantial compute, though PEFT/LoRA helps mitigate adaptation costs.",
+      "Where is the frontier heading? We are moving from bolted-on adapters to native omni-modal foundation models. In the next 12 to 24 months, look for native omni-modality pretrained from Step 0 on interleaved tokens; full-duplex conversational streaming with sub-200ms latency; and test-time acoustic reasoning to resolve tonal ambiguities.",
+      "To summarize: Speech is a continuous physical wave containing emotion, prosody, and linguistic tone that text cannot capture. Multi-modal alignment connects auditory perception with symbolic reasoning. And with parameter-efficient techniques like LoRA, these foundation architectures can be adapted to under-resourced languages on accessible hardware. Thank you! I welcome your questions."
+    ];
+
+    function updateSlide() {
+      slides.forEach((s, idx) => {
+        s.classList.toggle('active', idx === currentSlide);
+      });
+      document.getElementById('slide-num').innerText = `Slide ${currentSlide + 1} / ${totalSlides}`;
+      document.getElementById('progress-bar').style.width = `${((currentSlide + 1) / totalSlides) * 100}%`;
+      document.getElementById('speaker-script').innerText = scripts[currentSlide];
+
+      if (window.MathJax) {
+        MathJax.typesetPromise();
+      }
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides - 1) {
+        currentSlide++;
+        updateSlide();
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 0) {
+        currentSlide--;
+        updateSlide();
+      }
+    }
+
+    function toggleNotes() {
+      const drawer = document.getElementById('notes-drawer');
+      const btn = document.getElementById('notes-btn');
+      drawer.classList.toggle('open');
+      btn.classList.toggle('active');
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ') {
+        nextSlide();
+      } else if (e.key === 'ArrowLeft') {
+        prevSlide();
+      } else if (e.key === 's' || e.key === 'S') {
+        toggleNotes();
+      }
+    });
+
+    updateSlide();
+  </script>
+</body>
+</html>

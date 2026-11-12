@@ -28,10 +28,18 @@ This project uses **Parameter-Efficient Fine-Tuning (PEFT / LoRA)** to adapt a p
 ├── README.md               # Main project overview and setup guide
 ├── project_proposal.md     # Academic project proposal (3 candidate ideas)
 ├── plan/
-│   └── plan.md             # Detailed learning plan, milestones, and video tutorials
-├── data/                   # (Local cache) Processed audio & metadata (gitignored)
-├── notebooks/              # Kaggle / Colab exploration & training notebooks
-└── src/                    # Reusable training, preprocessing & evaluation scripts
+│   ├── plan.md               # Detailed project learning plan & milestones
+│   ├── presentation_plan.md  # Advanced DL seminar presentation plan & discussion board submission
+│   └── presentation_tasks.md # Actionable task tracker & rehearsal checklists
+├── presentation/             # Ready-to-deliver presentation slide decks
+│   ├── MultiModal_Audio_Alignment.pptx # Widescreen 16:9 PowerPoint with speaker notes
+│   ├── index.html            # Interactive web presentation (MathJax, Notes [S], Print-to-PDF)
+│   ├── slides.md             # Marp markdown slide deck
+│   └── generate_deck.py      # Automated PPTX slide generator script
+├── papers/                   # Downloaded primary literature PDFs (ICML, NeurIPS, ICLR)
+├── data/                     # (Local cache) Processed audio & metadata (gitignored)
+├── notebooks/                # Kaggle / Colab exploration & training notebooks
+└── src/                      # Reusable training, preprocessing & evaluation scripts
 ```
 
 ---
