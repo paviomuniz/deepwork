@@ -58,21 +58,30 @@ def load_and_split_bibletts(
     """Load BibleTTS Yoruba and apply canonical book-level train/val/test splits.
 
     Prevents data leakage across chapters/verses by splitting strictly on book IDs:
-    - Test: Gospel of John (JHN)
-    - Validation: Romans (ROM) & 1 Corinthians (1CO)
-    - Train: Remaining New Testament books (or all remaining books if nt_only=False)
+    - Full corpus: Test=JHN, Validation=(ROM, 1CO), Train=remaining NT books.
+    - Partial HF mirror (e.g. Imakandi-Labs/bibletss-yoruba): falls back to
+      available canonical books: Test=(COL, GAL, EPH), Validation=(1CO, EZR),
+      Train=remaining available books.
     """
     raw = load_dataset(config.dataset_name, split="train")
     raw = raw.cast_column("audio", Audio(sampling_rate=config.target_sampling_rate))
 
+    available_books = set(raw.unique("book"))
     val_set = set(config.val_books)
     test_set = set(config.test_books)
 
-    def _filter_nt(example: Dict[str, Any]) -> bool:
-        return example["book"] in NT_BOOKS
+    # Fallback if the HF mirror does not contain JHN/ROM (e.g., partial BibleTTS mirror)
+    if not (test_set & available_books) or not (val_set & available_books):
+        print(
+            f"[Dataset] Configured val/test books {val_set | test_set} not all found in "
+            f"dataset ({len(available_books)} books). Using canonical fallback books."
+        )
+        val_set = {"1CO", "EZR"} & available_books
+        test_set = {"COL", "GAL", "EPH"} & available_books
+        nt_only = False
 
     if nt_only:
-        raw = raw.filter(_filter_nt)
+        raw = raw.filter(lambda ex: ex["book"] in NT_BOOKS)
 
     train_ds = raw.filter(
         lambda ex: ex["book"] not in val_set and ex["book"] not in test_set
@@ -80,6 +89,14 @@ def load_and_split_bibletts(
     val_ds = raw.filter(lambda ex: ex["book"] in val_set)
     test_ds = raw.filter(lambda ex: ex["book"] in test_set)
 
+    assert len(train_ds) > 0, "Train split is empty!"
+    assert len(val_ds) > 0, "Validation split is empty!"
+    assert len(test_ds) > 0, "Test split is empty!"
+
+    print(
+        f"[Dataset] Book-level split sizes -> train: {len(train_ds)}, "
+        f"validation: {len(val_ds)}, test: {len(test_ds)}"
+    )
     return DatasetDict({"train": train_ds, "validation": val_ds, "test": test_ds})
 
 
