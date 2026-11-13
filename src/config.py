@@ -59,7 +59,7 @@ class ProjectConfig:
     learning_rate: float = 1e-4
     warmup_steps: int = 500
     weight_decay: float = 0.01
-    label_smoothing_factor: float = 0.1
+    label_smoothing_factor: float = 0.0
     per_device_train_batch_size: int = 8
     per_device_eval_batch_size: int = 8
     gradient_accumulation_steps: int = 4
