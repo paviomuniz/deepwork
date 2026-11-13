@@ -10,7 +10,7 @@
 
 ```text
 [Phase 1: Architecture & MVP] ──> [Phase 2 & 3: Colab Training & Ablation] ──> [Phase 4: Evaluation & T-NEER] ──> [Phase 5: Final Deliverables]
-         (Completed)                            (In Progress)                            (Pending)                        (Pending)
+         (Completed)                             (Completed)                              (Next)                          (Pending)
 ```
 
 ---
@@ -34,7 +34,7 @@
 
 ---
 
-## Phase 2 & 3: Colab GPU Execution & 3-Way Ablation Study (In Progress)
+## Phase 2 & 3: Colab GPU Execution & 3-Way Ablation Study (Completed)
 
 - [x] **Task 2.1: Run Configuration A — Zero-Shot Baseline (Colab A100)**
   - **Observed Results (Held-out Test Set: `COL`, `GAL`, `EPH`):**
@@ -52,8 +52,8 @@
     - `test_wer`: `50.1187%` (down from `113.2419%` — **-63.12 pts**)
     - `test_cer`: **`17.4420%`** (down from `81.9316%` — **-64.49 pts**, best CER across all configs)
     - Saved adapter: `checkpoints/whisper-small-yoruba-lora/lora_specaug/best_adapter`
-- [ ] **Task 2.3: Persist Trained LoRA Adapters**
-  - **Action:** Copy `checkpoints/whisper-small-yoruba-lora/*/best_adapter` to Google Drive / Hugging Face Hub before Colab session expiration.
+- [x] **Task 2.3: Persist Trained LoRA Adapters**
+  - **Action:** Saved `lora_raw/best_adapter` and `lora_specaug/best_adapter` to Google Drive (`/MyDrive/deepwork_checkpoints/`).
 
 ---
 
