@@ -104,7 +104,7 @@ def filter_and_prepare_split(
     ds: Dataset,
     processor: WhisperProcessor,
     config: ProjectConfig,
-    num_proc: int = 2,
+    num_proc: Optional[int] = None,
 ) -> Dataset:
     """Filter audio by duration [1.0s, 30.0s] and extract log-mel features & token labels."""
 

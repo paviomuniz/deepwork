@@ -21,18 +21,26 @@ def run_training(
     config: ProjectConfig,
     use_spec_augment: bool = True,
     max_steps: int = -1,
+    processor=None,
+    train_dataset=None,
+    eval_dataset=None,
+    test_dataset=None,
 ) -> Dict[str, float]:
-    """Train Whisper-small + LoRA on BibleTTS Yoruba and evaluate on Gospel of John."""
+    """Train Whisper-small + LoRA on BibleTTS Yoruba and evaluate on held-out test set."""
     set_seed(config.seed)
     config.apply_spec_augment = use_spec_augment
 
-    processor = build_processor(config)
+    if processor is None:
+        processor = build_processor(config)
     model = build_whisper_lora_model(config, use_lora=True)
 
-    raw_splits = load_and_split_bibletts(config, nt_only=True)
-    train_dataset = filter_and_prepare_split(raw_splits["train"], processor, config)
-    eval_dataset = filter_and_prepare_split(raw_splits["validation"], processor, config)
-    test_dataset = filter_and_prepare_split(raw_splits["test"], processor, config)
+    if train_dataset is None or eval_dataset is None or test_dataset is None:
+        raw_splits = load_and_split_bibletts(config, nt_only=True)
+        train_dataset = filter_and_prepare_split(raw_splits["train"], processor, config)
+        eval_dataset = filter_and_prepare_split(
+            raw_splits["validation"], processor, config
+        )
+        test_dataset = filter_and_prepare_split(raw_splits["test"], processor, config)
 
     train_collator = DataCollatorSpeechSeq2SeqWithPadding(
         processor=processor,
