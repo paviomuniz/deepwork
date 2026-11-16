@@ -1,0 +1,69 @@
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+build/
+dist/
+eggs/
+*.egg-info/
+*.egg
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+.conda/
+
+# Environment variables & secrets
+.env
+.env.*
+*.pem
+*.key
+
+# Jupyter Notebooks
+.ipynb_checkpoints/
+*/.ipynb_checkpoints/*
+
+# ML checkpoints, logs, and training outputs
+checkpoints/
+outputs/
+logs/
+runs/
+wandb/
+*.pt
+*.pth
+*.bin
+*.safetensors
+*.ckpt
+
+# Datasets & audio artifacts
+data/
+datasets/
+*.tgz
+*.tar.gz
+*.zip
+*.wav
+*.mp3
+*.flac
+
+# Caches
+.cache/
+hf_cache/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# OS & editor files
+.DS_Store
+._*
+.vscode/
+.idea/
+*.swp
+*.swo
+*.tmp
+*.bak
+*.fetch
