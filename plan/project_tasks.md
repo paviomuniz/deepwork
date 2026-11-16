@@ -57,8 +57,9 @@
 
 ---
 
-## Phase 4: Quantitative Evaluation & Error Analysis (Pending)
+## Phase 4: Quantitative Evaluation & Error Analysis (In Progress — Tooling Ready)
 
+- **Evaluation Pipeline:** [src/phase4_eval.py](file:///Users/paviomuniz/Library/CloudStorage/OneDrive-Pessoal/Projetos/deepwork/src/phase4_eval.py) & [notebooks/02_phase4_evaluation.ipynb](file:///Users/paviomuniz/Library/CloudStorage/OneDrive-Pessoal/Projetos/deepwork/notebooks/02_phase4_evaluation.ipynb) (ready for Colab execution against `/MyDrive/deepwork_checkpoints/`).
 - [ ] **Task 4.1: Diacritic-Preserving vs. Diacritic-Stripped Breakdown**
   - **Action:** Run `compute_asr_metrics(preds, refs)` on Config A, B, and C test predictions to quantify tone-mark and underdot (`ẹ`, `ọ`, `ṣ`) accuracy gains.
 - [ ] **Task 4.2: Theological Named Entity Error Audit (T-NEER)**
