@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="color-scheme" content="light dark" />
+  <title>Neural Oral Bible Translation — Yoruba Whisper + LoRA Showcase</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container">
+    <header class="hero">
+      <div class="badge-row">
+        <span class="badge">openai/whisper-small</span>
+        <span class="badge">PEFT LoRA (1.44% params)</span>
+        <span class="badge">BibleTTS Yoruba (16 kHz)</span>
+        <span class="badge">Held-out Test: COL · GAL · EPH</span>
+      </div>
+      <h1>Neural Oral Bible Translation: Yoruba Whisper + LoRA</h1>
+      <p>
+        Adapting OpenAI Whisper-Small to transcribe spoken Yoruba scripture with tonal diacritics and underdots
+        (<code>ẹ</code>, <code>ọ</code>, <code>ṣ</code>), eliminating zero-shot acoustic hallucinations and recovering theological entities.
+      </p>
+
+      <div class="kpi-grid">
+        <div class="kpi-card">
+          <div class="kpi-label">Word Error Rate (WER)</div>
+          <div class="kpi-value">48.51%</div>
+          <div class="kpi-sub">Down from 113.45% (-64.94 pts)</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Character Error Rate (CER)</div>
+          <div class="kpi-value">17.44%</div>
+          <div class="kpi-sub">LoRA + SpecAugment (-64.19 pts)</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">T-NEER Entity F1</div>
+          <div class="kpi-value">83.15%</div>
+          <div class="kpi-sub">100% Precision (up from 0.00% F1)</div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Trainable Parameters</div>
+          <div class="kpi-value">1.44%</div>
+          <div class="kpi-sub">3.54M / 245.27M (r=32, α=64)</div>
+        </div>
+      </div>
+    </header>
+
+    <div class="tabs">
+      <div class="tablist" role="tablist" aria-label="Project showcase sections">
+        <button type="button" role="tab" id="tab-arch" aria-selected="true">1. Architecture &amp; SpecAugment</button>
+        <button type="button" role="tab" id="tab-ablation" aria-selected="false">2. Ablation &amp; Diacritic Gap</button>
+        <button type="button" role="tab" id="tab-tneer" aria-selected="false">3. T-NEER Entity Audit</button>
+        <button type="button" role="tab" id="tab-verses" aria-selected="false">4. Yoruba Verse Diff Explorer</button>
+        <button type="button" role="tab" id="tab-live" aria-selected="false">5. Live Inference (Gradio)</button>
+      </div>
+
+      <!-- TAB 1: ARCHITECTURE -->
+      <div role="tabpanel" id="panel-arch" aria-labelledby="tab-arch" tabindex="0">
+        <div class="panel-inner">
+          <div class="card">
+            <h2>End-to-End Pipeline (Click any stage)</h2>
+            <div class="pipeline" id="pipeline-nodes">
+              <button type="button" class="pipe-node" data-step="audio" aria-pressed="true">48 kHz Audio</button>
+              <span class="pipe-arrow">→</span>
+              <button type="button" class="pipe-node" data-step="mel" aria-pressed="false">16 kHz Log-Mel [80×3000]</button>
+              <span class="pipe-arrow">→</span>
+              <button type="button" class="pipe-node" data-step="specaug" aria-pressed="false">SpecAugment (F=27, T=100)</button>
+              <span class="pipe-arrow">→</span>
+              <button type="button" class="pipe-node" data-step="lora" aria-pressed="false">Whisper + LoRA (1.44%)</button>
+              <span class="pipe-arrow">→</span>
+              <button type="button" class="pipe-node" data-step="nfc" aria-pressed="false">Unicode NFC Text</button>
+            </div>
+            <div class="pipe-detail" id="pipeline-detail"></div>
+          </div>
+
+          <div class="grid-2">
+            <div class="card">
+              <h3>Interactive SpecAugment Simulator</h3>
+              <p style="color: var(--muted); font-size: 0.9rem;">
+                Toggle frequency masking (<code>F=27</code>) and time masking (<code>T=100</code>) on an 80-channel log-mel spectrogram.
+              </p>
+              <div class="btn-row">
+                <button type="button" class="btn" id="toggle-freq" aria-pressed="true">Frequency Mask (F=27)</button>
+                <button type="button" class="btn" id="toggle-time" aria-pressed="true">Time Mask (T=100)</button>
+                <button type="button" class="btn" id="reroll-spec">New Mask Sample</button>
+              </div>
+              <canvas id="spec-canvas" width="640" height="220" aria-label="Interactive log-mel spectrogram with SpecAugment masks"></canvas>
+            </div>
+
+            <div class="card">
+              <h3>Canonical Book-Level Split (Leakage Guard)</h3>
+              <p style="color: var(--muted); font-size: 0.9rem;">
+                Splits strictly by USFM book code—never by random verse—so the model cannot memorize speaker cadence or chapter context.
+              </p>
+              <div class="bar-group">
+                <div class="bar-row">
+                  <span><strong>Train</strong> (Remaining Books)</span>
+                  <div class="bar-track"><div class="bar-fill" style="width: 89%; background: var(--accent);"></div></div>
+                  <span>2,927</span>
+                </div>
+                <div class="bar-row">
+                  <span><strong>Validation</strong> (1CO, EZR)</span>
+                  <div class="bar-track"><div class="bar-fill" style="width: 6.4%; background: var(--indigo);"></div></div>
+                  <span>209</span>
+                </div>
+                <div class="bar-row">
+                  <span><strong>Test</strong> (COL, GAL, EPH)</span>
+                  <div class="bar-track"><div class="bar-fill" style="width: 4.6%; background: var(--emerald);"></div></div>
+                  <span>151</span>
+                </div>
+              </div>
+              <p style="color: var(--muted); font-size: 0.85rem; margin-top: 1rem;">
+                Duration filter: <code>[1.0s, 30.0s]</code> · Training hardware: Google Colab A100, 6 epochs, <code>fp16=True</code>.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 2: ABLATION -->
+      <div role="tabpanel" id="panel-ablation" aria-labelledby="tab-ablation" hidden>
+        <div class="panel-inner">
+          <div class="card">
+            <h2>3-Way Ablation &amp; Diacritic Gap</h2>
+            <div class="btn-row">
+              <span>Metric Mode:</span>
+              <button type="button" class="btn" id="mode-tone" aria-pressed="true">With Tonal Diacritics (Strict)</button>
+              <button type="button" class="btn" id="mode-notone" aria-pressed="false">Diacritic-Stripped (No-Tone)</button>
+            </div>
+
+            <div class="grid-2">
+              <div>
+                <h3>Word Error Rate (WER %) — Lower is Better</h3>
+                <div class="bar-group" id="wer-bars"></div>
+              </div>
+              <div>
+                <h3>Character Error Rate (CER %) — Lower is Better</h3>
+                <div class="bar-group" id="cer-bars"></div>
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <h3 id="ablation-table-caption">Full Phase 4 Quantitative Breakdown</h3>
+            <div tabindex="0" role="region" aria-labelledby="ablation-table-caption" class="table-wrapper">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Configuration</th>
+                    <th>WER (%)</th>
+                    <th>WER No-Tone (%)</th>
+                    <th>Diacritic WER Gap</th>
+                    <th>CER (%)</th>
+                    <th>CER No-Tone (%)</th>
+                    <th>Diacritic CER Gap</th>
+                  </tr>
+                </thead>
+                <tbody id="ablation-tbody"></tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 3: T-NEER -->
+      <div role="tabpanel" id="panel-tneer" aria-labelledby="tab-tneer" hidden>
+        <div class="panel-inner">
+          <div class="card">
+            <h2>Theological Named Entity Error Audit (T-NEER)</h2>
+            <p style="color: var(--muted);">
+              Evaluated across <strong>104</strong> occurrences of 24 curated Yoruba biblical proper nouns and theological terms in the held-out test set.
+            </p>
+            <div class="bar-group" id="tneer-bars"></div>
+          </div>
+
+          <div class="card">
+            <h3>24 Curated Yoruba Theological Entities (<code>ProjectConfig.theological_entities</code>)</h3>
+            <div class="entity-grid" id="entity-grid"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 4: VERSE DIFF EXPLORER -->
+      <div role="tabpanel" id="panel-verses" aria-labelledby="tab-verses" hidden>
+        <div class="panel-inner">
+          <div class="card">
+            <h2>Interactive Yoruba Verse Diff Explorer (151 Held-Out Test Verses)</h2>
+            <div class="btn-row">
+              <label for="verse-select"><strong>Select Showcase / Test Verse:</strong></label>
+              <select id="verse-select"></select>
+              <input type="search" id="verse-search" placeholder="Filter by Yoruba word (e.g. Ọlọ́run, Kristi)..." aria-label="Filter test verses" />
+            </div>
+            <p style="font-size: 0.85rem; color: var(--muted);">
+              Legend: <span class="tok-ok">Exact match</span> · <span class="tok-tone">Tone/diacritic mismatch</span> · <span class="tok-err">Missing / hallucinated word</span>
+            </p>
+            <div class="verse-box" id="verse-diff-container"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- TAB 5: LIVE GRADIO INFERENCE -->
+      <div role="tabpanel" id="panel-live" aria-labelledby="tab-live" hidden>
+        <div class="panel-inner">
+          <div class="card">
+            <h2>Live Model Inference (Companion Gradio App)</h2>
+            <p style="color: var(--muted);">
+              This static showcase runs zero-cost on GitHub Pages using your Phase 4 results. For live microphone or audio-file transcription with
+              <code>lora_raw</code> and <code>lora_specaug</code>, run the companion <code>app.py</code> locally or deploy it to Hugging Face Spaces.
+            </p>
+            <div class="grid-2">
+              <div class="transcript-card">
+                <div class="transcript-label">1. Run Locally with Adapters</div>
+                <pre style="overflow-x: auto; margin: 0;"><code>pip install gradio
+python app.py</code></pre>
+              </div>
+              <div class="transcript-card">
+                <div class="transcript-label">2. Deploy to Hugging Face Spaces</div>
+                <p style="font-size: 0.9rem; margin: 0;">
+                  Upload <code>lora_raw</code> and <code>lora_specaug</code> to Hugging Face Hub, set
+                  <code>LORA_RAW_REPO</code> and <code>LORA_SPECAUG_REPO</code> in your Space Secrets/Variables, and push <code>app.py</code>.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
