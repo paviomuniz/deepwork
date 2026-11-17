@@ -654,6 +654,94 @@
 
     <!-- SLIDE 10 -->
     <div class="slide" id="slide-10">
+      <div class="slide-badge">Empirical Case Study</div>
+      <h2 class="slide-title">BibleTTS Yoruba ASR: <span>Whisper-Small + LoRA Results</span></h2>
+
+      <div class="card cyan" style="margin-bottom: 1.2rem;">
+        <div class="card-title">Held-Out Test Set (COL, GAL, EPH — 1.44% Trainable Parameters)</div>
+        <table style="width: 100%; border-collapse: collapse; font-size: 0.95rem; text-align: left;">
+          <thead>
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.2); color: var(--accent-cyan);">
+              <th style="padding: 0.5rem;">Configuration</th>
+              <th style="padding: 0.5rem; text-align: right;">WER (%)</th>
+              <th style="padding: 0.5rem; text-align: right;">WER No-Tone</th>
+              <th style="padding: 0.5rem; text-align: right;">CER (%)</th>
+              <th style="padding: 0.5rem; text-align: right;">CER No-Tone</th>
+              <th style="padding: 0.5rem; text-align: right;">T-NEER F1</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.08);">
+              <td style="padding: 0.5rem;">Config A: Zero-Shot Baseline</td>
+              <td style="padding: 0.5rem; text-align: right;">113.45</td>
+              <td style="padding: 0.5rem; text-align: right;">109.36</td>
+              <td style="padding: 0.5rem; text-align: right;">81.63</td>
+              <td style="padding: 0.5rem; text-align: right;">71.34</td>
+              <td style="padding: 0.5rem; text-align: right;">0.00% (0/104)</td>
+            </tr>
+            <tr style="border-bottom: 1px solid rgba(255,255,255,0.08); background: rgba(6, 182, 212, 0.08);">
+              <td style="padding: 0.5rem;"><strong>Config B: LoRA (Raw, r=32)</strong></td>
+              <td style="padding: 0.5rem; text-align: right;"><strong>48.51</strong></td>
+              <td style="padding: 0.5rem; text-align: right;"><strong>39.49</strong></td>
+              <td style="padding: 0.5rem; text-align: right;">18.02</td>
+              <td style="padding: 0.5rem; text-align: right;">12.98</td>
+              <td style="padding: 0.5rem; text-align: right;"><strong>83.15%</strong> (100% P)</td>
+            </tr>
+            <tr>
+              <td style="padding: 0.5rem;"><strong>Config C: LoRA + SpecAugment</strong></td>
+              <td style="padding: 0.5rem; text-align: right;">49.96</td>
+              <td style="padding: 0.5rem; text-align: right;">40.23</td>
+              <td style="padding: 0.5rem; text-align: right;"><strong>17.44</strong></td>
+              <td style="padding: 0.5rem; text-align: right;"><strong>11.60</strong></td>
+              <td style="padding: 0.5rem; text-align: right;">81.36% (72/104)</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="grid-3">
+        <div class="card emerald">
+          <div class="card-title">-64.94 pts WER</div>
+          <p style="font-size: 0.9rem;">LoRA adaptation drops WER from 113.45% to 48.51% and CER from 81.63% to 17.44%.</p>
+        </div>
+        <div class="card indigo">
+          <div class="card-title">T-NEER Recovery</div>
+          <p style="font-size: 0.9rem;">Zero-shot misses 104/104 theological terms; LoRA Raw hits 100.00% Precision &amp; 71.15% Recall.</p>
+        </div>
+        <div class="card">
+          <div class="card-title">Diacritic Gap (+9 pts)</div>
+          <p style="font-size: 0.9rem;">9–10% of remaining WER is purely tonal/underdot placement (48.51% vs. 39.49% no-tone).</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 11 -->
+    <div class="slide" id="slide-11">
+      <div class="slide-badge">Qualitative Error Analysis</div>
+      <h2 class="slide-title">Yoruba Verse Diffs: <span>Halting Hallucinations &amp; Recovering Tone</span></h2>
+
+      <div class="grid-2">
+        <div class="card cyan">
+          <div class="card-title">EPH_001_Verse_013 (Ọlọ́run, Olúwa, Ẹ̀mí)</div>
+          <ul style="font-size: 0.9rem; gap: 0.8rem;">
+            <li><strong>Ground Truth:</strong> Ògo ni fún Ọlọ́run àti Baba Jesu Kristi Olúwa wa, ẹni tí ó ti bùkún wa láti inú ọ̀run wá pẹ̀lú àwọn ìbùkún ẹ̀mí gbogbo nínú Kristi.</li>
+            <li style="color: #fca5a5;"><strong>Zero-Shot Baseline:</strong> <code>ḍḍḍḍḍḍḍḍḍḍḍḍḍḍḍḍḍḍḍḍ...</code> (complete acoustic hallucination collapse)</li>
+            <li style="color: #6ee7b7;"><strong>LoRA (Raw):</strong> Ìgó ní fún ọlọ́run àti baba Jesu Kristi Olúwa wá, ẹni tó ti bòkún wá láti nú ọ̀run wa pẹ̀lú àwọn ìbòkún ẹmí gbogbo nínú Kristi.</li>
+          </ul>
+        </div>
+        <div class="card indigo">
+          <div class="card-title">COL_001_Verse_014 (Ọlọ́run, oore-ọ̀fẹ́, Mímọ́)</div>
+          <ul style="font-size: 0.9rem; gap: 0.8rem;">
+            <li><strong>Ground Truth:</strong> Sí àwọn ẹni mímọ́ àti àwọn arákùnrin àti arábìnrin nínú Kristi tí wọ́n ń gbé ní ìlú Kolose: Oore-ọ̀fẹ́ àti àlàáfíà fún un yín láti ọ̀dọ̀ Ọlọ́run Baba wa.</li>
+            <li style="color: #fca5a5;"><strong>Zero-Shot Baseline:</strong> Sī yāwenimimo ... āt'yārng dōlōn o bābāwa (×8 repetition loop)</li>
+            <li style="color: #6ee7b7;"><strong>LoRA (Raw):</strong> Sí àwọn èní mímọ́ àti àwọn arákùnrin àti arabìnrin ní nú Kristi tí wọn ń gbé ní ìlúkólóse. Orí ọ̀fẹ́ àti àláfíà fún yín láti ọ̀dọ̀ Ọlọ́run baba wà.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 12 -->
+    <div class="slide" id="slide-12">
       <div class="slide-badge">Summary & Takeaways</div>
       <h2 class="slide-title">Synthesis: <span>The Future of Auditory Intelligence</span></h2>
 
@@ -707,6 +795,8 @@
       "In empirical benchmarks, aligned architectures consistently outperform cascaded pipelines. AudioPaLM proved that direct audio input beats chaining ASR with Google Translate. Meta's SeamlessM4T showed 3 to 5 BLEU point gains across 100 languages. Qwen2-Audio achieves direct voice conversation with high robustness under acoustic noise.",
       "Multimodal alignment faces several key challenges. First, 'Modality Collapse': the LLM's massive text prior can overpower the audio adapter, outputting high-probability generic text that contradicts the audio. Second, silence and noise can trigger hallucination loops. Third, training requires substantial compute, though PEFT/LoRA helps mitigate adaptation costs.",
       "Where is the frontier heading? We are moving from bolted-on adapters to native omni-modal foundation models. In the next 12 to 24 months, look for native omni-modality pretrained from Step 0 on interleaved tokens; full-duplex conversational streaming with sub-200ms latency; and test-time acoustic reasoning to resolve tonal ambiguities.",
+      "To validate these principles empirically, we fine-tuned Whisper-small on BibleTTS Yoruba using LoRA with only 1.44% trainable parameters. On the held-out test books, WER dropped from 113.45% to 48.51%, CER dropped from 81.63% to 17.44%, and Theological Named Entity F1 jumped from 0% to 83.15%. Stripping diacritics reveals a 9-point WER gap caused purely by tone and underdot placement.",
+      "Qualitatively, zero-shot Whisper suffered complete acoustic hallucination loops—outputting strings of 'd' characters or repeating phonetic gibberish—while missing all 104 curated theological entities. With LoRA adaptation, those loops vanish and key terms like Olorun, Oluwa, and Emi Mimo are recovered accurately.",
       "To summarize: Speech is a continuous physical wave containing emotion, prosody, and linguistic tone that text cannot capture. Multi-modal alignment connects auditory perception with symbolic reasoning. And with parameter-efficient techniques like LoRA, these foundation architectures can be adapted to under-resourced languages on accessible hardware. Thank you! I welcome your questions."
     ];
 

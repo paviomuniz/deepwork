@@ -514,11 +514,89 @@ def build_presentation(output_path="presentation/MultiModal_Audio_Alignment.pptx
     )
 
     # =========================================================================
-    # SLIDE 10: Conclusion & Key Takeaways
+    # SLIDE 10: Empirical Case Study (BibleTTS Yoruba LoRA)
+    # =========================================================================
+    s10_emp = prs.slides.add_slide(blank_layout)
+    set_slide_background(s10_emp)
+    add_header(s10_emp, "Empirical Case Study", "BibleTTS Yoruba ASR: Whisper-Small + LoRA (1.44% Trainable Params)", 10)
+
+    add_card(s10_emp, Inches(0.8), Inches(1.8), Inches(3.7), Inches(5.0),
+             "Config A: Zero-Shot Baseline",
+             [
+                 "WER: 113.45% (109.36% no-tone)",
+                 "CER: 81.63% (71.34% no-tone)",
+                 "T-NEER F1: 0.00% (0 / 104 TP)",
+                 "Failure Mode: Complete acoustic collapse ('dddd...' loops) & phonetic gibberish."
+             ],
+             border_color=ACCENT_ROSE, header_color=ACCENT_ROSE,
+             formula="Baseline: 0/104 Theological Entities")
+
+    add_card(s10_emp, Inches(4.8), Inches(1.8), Inches(3.7), Inches(5.0),
+             "Config B: LoRA (Raw, r=32)",
+             [
+                 "WER: 48.51% (-64.94 pts vs. Baseline)",
+                 "WER No-Tone: 39.49% (+9.02 diacritic gap)",
+                 "CER: 18.02% (12.98% no-tone)",
+                 "T-NEER: 100.00% Precision | 71.15% Recall | 83.15% F1 (74 / 104 TP)"
+             ],
+             border_color=ACCENT_CYAN, header_color=ACCENT_CYAN,
+             formula="Best WER & T-NEER F1 (83.15%)")
+
+    add_card(s10_emp, Inches(8.8), Inches(1.8), Inches(3.7), Inches(5.0),
+             "Config C: LoRA + SpecAugment",
+             [
+                 "WER: 49.96% (40.23% no-tone)",
+                 "CER: 17.44% (-64.19 pts, best overall)",
+                 "CER No-Tone: 11.60% (+5.84 diacritic gap)",
+                 "T-NEER: 98.63% Precision | 69.23% Recall | 81.36% F1 (72 / 104 TP)"
+             ],
+             border_color=ACCENT_GREEN, header_color=ACCENT_GREEN,
+             formula="Best CER: 17.44% (11.60% No-Tone)")
+
+    set_speaker_notes(s10_emp,
+        "To validate these principles empirically, we fine-tuned Whisper-small on BibleTTS Yoruba using LoRA with only 1.44% trainable parameters. "
+        "On the held-out test books, WER dropped from 113.45% to 48.51%, CER dropped from 81.63% to 17.44%, and Theological Named Entity F1 jumped from 0% to 83.15%. "
+        "Stripping diacritics reveals a 9-point WER gap caused purely by tone and underdot placement."
+    )
+
+    # =========================================================================
+    # SLIDE 11: Qualitative Error Analysis (Yoruba Verse Diffs)
+    # =========================================================================
+    s11_qual = prs.slides.add_slide(blank_layout)
+    set_slide_background(s11_qual)
+    add_header(s11_qual, "Qualitative Error Analysis", "Yoruba Verse Diffs: Halting Hallucinations & Recovering Tone", 11)
+
+    add_card(s11_qual, Inches(0.8), Inches(1.8), Inches(5.7), Inches(5.0),
+             "EPH_001_Verse_013 (Olorun, Oluwa, Emi)",
+             [
+                 "Ground Truth: Ogo ni fun Olorun ati Baba Jesu Kristi Oluwa wa, eni ti o ti bukun wa...",
+                 "Zero-Shot Baseline: dddddddddddddddddddd... (complete acoustic hallucination collapse)",
+                 "LoRA (Raw): Igo ni fun olorun ati baba Jesu Kristi Oluwa wa, eni to ti bokun wa..."
+             ],
+             border_color=ACCENT_CYAN, header_color=ACCENT_CYAN,
+             formula="Hallucination Loop Eliminated")
+
+    add_card(s11_qual, Inches(6.8), Inches(1.8), Inches(5.7), Inches(5.0),
+             "COL_001_Verse_014 (Olorun, oore-ofe, Mimo)",
+             [
+                 "Ground Truth: Si awon eni mimo ati awon arakunrin ati arabirin ninu Kristi...",
+                 "Zero-Shot Baseline: Si yawenimimo ... at'yarng dolon o babawa (x8 repetition loop)",
+                 "LoRA (Raw): Si awon eni mimo ati awon arakunrin ati arabirin ni nu Kristi... Olorun baba wa."
+             ],
+             border_color=ACCENT_INDIGO, header_color=ACCENT_INDIGO,
+             formula="Theological Entities & Tone Restored")
+
+    set_speaker_notes(s11_qual,
+        "Qualitatively, zero-shot Whisper suffered complete acoustic hallucination loops—outputting strings of 'd' characters or repeating phonetic gibberish—while missing all 104 curated theological entities. "
+        "With LoRA adaptation, those loops vanish and key terms like Olorun, Oluwa, and Emi Mimo are recovered accurately."
+    )
+
+    # =========================================================================
+    # SLIDE 12: Conclusion & Key Takeaways
     # =========================================================================
     s10 = prs.slides.add_slide(blank_layout)
     set_slide_background(s10)
-    add_header(s10, "Summary & Takeaways", "Synthesis: The Future of Auditory Intelligence", 10)
+    add_header(s10, "Summary & Takeaways", "Synthesis: The Future of Auditory Intelligence", 12)
 
     add_card(s10, Inches(0.8), Inches(1.8), Inches(11.733), Inches(5.0),
              "Core Technical Takeaways for Deep Learning Practitioners",

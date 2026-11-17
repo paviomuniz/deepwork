@@ -129,7 +129,35 @@ style: |
 
 ---
 
-## 10. Synthesis & Key Takeaways
+## 10. Empirical Case Study: BibleTTS Yoruba ASR
+### Whisper-Small + LoRA (1.44% Trainable Params) on Held-Out `COL`, `GAL`, `EPH`
+
+| Configuration | WER (%) | WER No-Tone (%) | CER (%) | CER No-Tone (%) | T-NEER F1 (%) |
+|---|---:|---:|---:|---:|---:|
+| **Config A:** Zero-Shot Baseline | 113.45 | 109.36 | 81.63 | 71.34 | 0.00 |
+| **Config B:** LoRA (Raw, $r=32$) | **48.51** | **39.49** | 18.02 | 12.98 | **83.15** |
+| **Config C:** LoRA + SpecAugment | 49.96 | 40.23 | **17.44** | **11.60** | 81.36 |
+
+* **-64.94 pts WER / -64.19 pts CER** reduction over Zero-Shot Whisper-Small.
+* **T-NEER Audit:** Zero-shot recovers **0 / 104** curated theological entities (`0.00%` F1); LoRA Raw achieves **100.00% Precision** and **83.15% F1** (`74 / 104` TP).
+* **Diacritic Bottleneck:** ~9–10 pts of remaining WER (`48.51%` vs. `39.49%`) stems purely from tonal/underdot placement.
+
+---
+
+## 11. Qualitative Analysis: Yoruba Verse Transcripts
+### Eliminating Acoustic Hallucination Loops & Recovering Theological Entities
+
+* **`EPH_001_Verse_013` (`Ọlọ́run`, `Olúwa`, `Ẹ̀mí`):**
+  * **Ground Truth:** *Ògo ni fún Ọlọ́run àti Baba Jesu Kristi Olúwa wa, ẹni tí ó ti bùkún wa láti inú ọ̀run wá pẹ̀lú àwọn ìbùkún ẹ̀mí gbogbo nínú Kristi.*
+  * **Zero-Shot Baseline:** `ḍḍḍḍḍḍḍḍḍḍḍḍḍḍḍḍḍḍḍḍ...` *(complete acoustic collapse)*
+  * **LoRA (Raw):** *Ìgó ní fún ọlọ́run àti baba Jesu Kristi Olúwa wá, ẹni tó ti bòkún wá láti nú ọ̀run wa pẹ̀lú àwọn ìbòkún ẹmí gbogbo nínú Kristi.*
+* **`COL_001_Verse_014` (`Ọlọ́run`, `oore-ọ̀fẹ́`, `Mímọ́`):**
+  * **Zero-Shot Baseline:** *Sī yāwenimimo ... āt'yārng dōlōn o bābāwa (×8 repetition loop)*
+  * **LoRA (Raw):** *Sí àwọn èní mímọ́ àti àwọn arákùnrin àti arabìnrin ní nú Kristi tí wọn ń gbé ní ìlúkólóse. Orí ọ̀fẹ́ àti àláfíà fún yín láti ọ̀dọ̀ Ọlọ́run baba wà.*
+
+---
+
+## 12. Synthesis & Key Takeaways
 ### The Multi-Modal Alignment Blueprint
 
 1. **Continuous > Discrete:** Continuous feature maps preserve vocal prosody, pitch, and emotion; RVQ discrete codecs suffer from sequence explosion.

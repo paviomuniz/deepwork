@@ -10,7 +10,7 @@
 
 ```text
 [Phase 1: Architecture & MVP] ──> [Phase 2 & 3: Colab Training & Ablation] ──> [Phase 4: Evaluation & T-NEER] ──> [Phase 5: Final Deliverables]
-         (Completed)                             (Completed)                              (Next)                          (Pending)
+         (Completed)                             (Completed)                            (Completed)                     (Completed)
 ```
 
 ---
@@ -57,22 +57,27 @@
 
 ---
 
-## Phase 4: Quantitative Evaluation & Error Analysis (In Progress — Tooling Ready)
+## Phase 4: Quantitative Evaluation & Error Analysis (Completed)
 
-- **Evaluation Pipeline:** [src/phase4_eval.py](file:///Users/paviomuniz/Library/CloudStorage/OneDrive-Pessoal/Projetos/deepwork/src/phase4_eval.py) & [notebooks/02_phase4_evaluation.ipynb](file:///Users/paviomuniz/Library/CloudStorage/OneDrive-Pessoal/Projetos/deepwork/notebooks/02_phase4_evaluation.ipynb) (ready for Colab execution against `/MyDrive/deepwork_checkpoints/`).
-- [ ] **Task 4.1: Diacritic-Preserving vs. Diacritic-Stripped Breakdown**
-  - **Action:** Run `compute_asr_metrics(preds, refs)` on Config A, B, and C test predictions to quantify tone-mark and underdot (`ẹ`, `ọ`, `ṣ`) accuracy gains.
-- [ ] **Task 4.2: Theological Named Entity Error Audit (T-NEER)**
-  - **Action:** Run `compute_theological_entity_audit(preds, refs)` across the curated biblical proper noun and theological term list in `ProjectConfig.theological_entities`.
-- [ ] **Task 4.3: Qualitative Side-by-Side Verse Comparisons**
-  - **Action:** Extract 3–5 representative test verses (`COL`, `GAL`, `EPH`) showing Ground Truth vs. Zero-Shot Baseline vs. LoRA + SpecAugment transcripts alongside `IPython.display.Audio` playback.
+- **Evaluation Pipeline:** [src/phase4_eval.py](file:///Users/paviomuniz/Library/CloudStorage/OneDrive-Pessoal/Projetos/deepwork/src/phase4_eval.py), [notebooks/02_phase4_evaluation.ipynb](file:///Users/paviomuniz/Library/CloudStorage/OneDrive-Pessoal/Projetos/deepwork/notebooks/02_phase4_evaluation.ipynb), [phase4_report.md](file:///Users/paviomuniz/Library/CloudStorage/OneDrive-Pessoal/Projetos/deepwork/phase4_report.md), and [phase4_results.json](file:///Users/paviomuniz/Library/CloudStorage/OneDrive-Pessoal/Projetos/deepwork/phase4_results.json).
+- [x] **Task 4.1: Diacritic-Preserving vs. Diacritic-Stripped Breakdown**
+  - **Config A (Zero-Shot Baseline):** `113.45%` WER (`109.36%` no-tone, `+4.09` gap) | `81.63%` CER (`71.34%` no-tone, `+10.29` gap).
+  - **Config B (LoRA Raw):** **`48.51%`** WER (**`39.49%`** no-tone, `+9.02` gap) | `18.02%` CER (`12.98%` no-tone, `+5.05` gap).
+  - **Config C (LoRA + SpecAugment):** `49.96%` WER (`40.23%` no-tone, `+9.73` gap) | **`17.44%`** CER (**`11.60%`** no-tone, `+5.84` gap).
+- [x] **Task 4.2: Theological Named Entity Error Audit (T-NEER)**
+  - **Config A (Zero-Shot Baseline):** `0.00%` Precision / `0.00%` Recall / `0.00%` F1 (`0` TP, `104` FN).
+  - **Config B (LoRA Raw):** **`100.00%`** Precision / **`71.15%`** Recall / **`83.15%`** F1 (`74` TP, `30` FN).
+  - **Config C (LoRA + SpecAugment):** `98.63%` Precision / `69.23%` Recall / `81.36%` F1 (`72` TP, `32` FN).
+- [x] **Task 4.3: Qualitative Side-by-Side Verse Comparisons**
+  - Extracted 5 representative test verses (`EPH_001_Verse_013`, `GAL_004_Verse_019`, `COL_001_Verse_014`, `EPH_001_Verse_002`, `EPH_004_Verse_003`) showing zero-shot `ḍḍḍḍ...` / repetition hallucinations vs. LoRA diacritic & entity recovery.
 
 ---
 
-## Phase 5: Final Presentation & Repository Sync (Pending)
+## Phase 5: Final Presentation & Repository Sync (Completed)
 
-- [ ] **Task 5.1: Update Presentation Deck with Empirical Results**
-  - **Action:** Populate [slides.md](file:///Users/paviomuniz/Library/CloudStorage/OneDrive-Pessoal/Projetos/deepwork/presentation/slides.md), [index.html](file:///Users/paviomuniz/Library/CloudStorage/OneDrive-Pessoal/Projetos/deepwork/presentation/index.html), and [MultiModal_Audio_Alignment.pptx](file:///Users/paviomuniz/Library/CloudStorage/OneDrive-Pessoal/Projetos/deepwork/presentation/MultiModal_Audio_Alignment.pptx) with final WER/CER/T-NEER tables and qualitative Yoruba diffs.
-- [ ] **Task 5.2: Commit & Push Final Artifacts to GitHub**
+- [x] **Task 5.1: Update Presentation Deck with Empirical Results**
+  - **Action:** Populated [slides.md](file:///Users/paviomuniz/Library/CloudStorage/OneDrive-Pessoal/Projetos/deepwork/presentation/slides.md), [index.html](file:///Users/paviomuniz/Library/CloudStorage/OneDrive-Pessoal/Projetos/deepwork/presentation/index.html), [generate_deck.py](file:///Users/paviomuniz/Library/CloudStorage/OneDrive-Pessoal/Projetos/deepwork/presentation/generate_deck.py), and regenerated [MultiModal_Audio_Alignment.pptx](file:///Users/paviomuniz/Library/CloudStorage/OneDrive-Pessoal/Projetos/deepwork/presentation/MultiModal_Audio_Alignment.pptx) (12 slides) with the Phase 4 WER/CER/T-NEER tables and qualitative Yoruba verse diffs.
+- [x] **Task 5.2: Commit & Push Final Artifacts to GitHub**
+  - **Action:** Committed and pushed `phase4_report.md`, `phase4_results.json`, `plan/project_tasks.md`, and updated `presentation/` assets to `origin/main`.
   - **Action:** Commit `src/`, `notebooks/`, `plan/project_tasks.md`, and updated presentation assets to `origin/main`.
 
